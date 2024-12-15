@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Point P and Point F Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+        table {
+            width: 60%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        input {
+            margin: 20px;
+            width: 300px;
+        }
+        h2 {
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+<h1>Point P and Point F Visualization</h1>
+
+<!-- Input range for selecting point P -->
+<label for="pointP">Select x-coordinate of P (0.1 to 27.7):</label><br>
+<input type="range" id="pointP" min="0.1" max="27.7" step="0.1" value="1">
+<p>Selected Point P: (<span id="px">1</span>, 0)</p>
+
+<!-- Dynamic Results Table -->
+<h2>Dynamic Results</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Point P (x, y)</th>
+        <th>Point F (x, y)</th>
+        <th>Area of polygon</th>
+    </tr>
+    </thead>
+    <tbody id="resultTable">
+    <tr>
+        <td>(1, 0)</td>
+        <td>(Loading...)</td>
+        <td>(Loading...)</td>
+    </tr>
+    </tbody>
+</table>
+
+<!-- Precomputed Results Table -->
+<h2>Precomputed Solutions</h2>
+<table>
+    <thead>
+    <tr>
+        <th>Point P (x, y)</th>
+        <th>Point F (x, y)</th>
+        <th>Area of polygon</th>
+    </tr>
+    </thead>
+    <tbody id="precomputedTable"></tbody>
+</table>
+
+<script>
+    const POINTS = {
+        A: { x: 0, y: 0 },
+        B: { x: 27.8, y: 0 },
+        C: { x: 3.61, y: -28.95 },
+        D: { x: 31.47, y: -27.10 }
+    };
+
+    // here I'm using Shoelace formula to calculate the area of a polygon
+    function calculateArea(points) {
+        let area = 0;
+        for (let i = 0; i < points.length; i++) {
+            const j = (i + 1) % points.length;
+            area += points[i].x * points[j].y - points[j].x * points[i].y;
+        }
+        return Math.abs(area) / 2;
+    }
+
+    // Find point F for a given point P
+    //P is based on px input.
+    //Loop through 1000 evenly spaced points between 𝐶 and D - parametrized by t
+    // calculation of F coordinates
+    // calculation of area
+    // if area is close to target area, then it returns F and calculated area
+
+    function findPointF(px) {
+        const P = { x: px, y: 0 };
+        const steps = 1000;
+        const targetArea = 350;
+
+        for (let i = 0; i <= steps; i++) {
+            const t = i / steps;
+            const F = {
+                x: POINTS.C.x + t * (POINTS.D.x - POINTS.C.x),
+                y: POINTS.C.y + t * (POINTS.D.y - POINTS.C.y)
+            };
+            const area = calculateArea([POINTS.A, P, F, POINTS.C]);
+            if (Math.abs(area - targetArea) < 1) {
+                return { F, area: area.toFixed(2) };
+            }
+        }
+        return null;
+    }
+
+    // Update dynamic results table
+    // takes px value based on input range from html
+    // displays the value in the dynamic result table
+    //computes the F and area using previos function
+    // updates the table with new values
+    function updateResults() {
+        const px = parseFloat(document.getElementById("pointP").value);
+        document.getElementById("px").innerText = px.toFixed(2);
+
+        const resultTable = document.getElementById("resultTable");
+        resultTable.innerHTML = ""; // Clear table
+
+        const result = findPointF(px);
+        if (result) {
+            const row = `
+          <tr>
+            <td>(${px.toFixed(2)}, 0)</td>
+            <td>(${result.F.x.toFixed(2)}, ${result.F.y.toFixed(2)})</td>
+            <td>${result.area}</td>
+          </tr>
+        `;
+            resultTable.innerHTML = row;
+        } else {
+            resultTable.innerHTML = `
+          <tr>
+            <td>(${px.toFixed(2)}, 0)</td>
+            <td>No solution found</td>
+            <td>N/A</td>
+          </tr>
+        `;
+        }
+    }
+
+    // Generate precomputed results for integer values of P
+    //iterates trough each integer from 1 to 27
+    // uses previos function to calculate area and F
+    // displays results in another table
+    function generatePrecomputedTable() {
+        const tableBody = document.getElementById("precomputedTable");
+        tableBody.innerHTML = ""; // Clear existing content
+
+        for (let px = 1; px <= 27; px++) {
+            const result = findPointF(px);
+            if (result) {
+                const row = `
+            <tr>
+              <td>(${px}, 0)</td>
+              <td>(${result.F.x.toFixed(2)}, ${result.F.y.toFixed(2)})</td>
+              <td>${result.area}</td>
+            </tr>
+          `;
+                tableBody.innerHTML += row;
+            }
+        }
+    }
+
+    // Event listeners
+    //updates results whenever value changes
+    //when page is loaded displays both tables
+    document.getElementById("pointP").addEventListener("input", updateResults);
+    window.onload = () => {
+        updateResults();
+        generatePrecomputedTable();
+    };
+</script>
+</body>
+</html>
