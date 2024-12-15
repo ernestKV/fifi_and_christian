@@ -47,12 +47,16 @@
     <tr>
         <th>Point P (x, y)</th>
         <th>Point F (x, y)</th>
-        <th>Area of polygon</th>
+        <th>Area of ABFP</th>
+        <th>Point F2 (x, y)</th>
+        <th>Area2 of ABFP</th>
     </tr>
     </thead>
     <tbody id="resultTable">
     <tr>
         <td>(1, 0)</td>
+        <td>(Loading...)</td>
+        <td>(Loading...)</td>
         <td>(Loading...)</td>
         <td>(Loading...)</td>
     </tr>
@@ -66,7 +70,9 @@
     <tr>
         <th>Point P (x, y)</th>
         <th>Point F (x, y)</th>
-        <th>Area of polygon</th>
+        <th>Area of ABFP</th>
+        <th>Point F2 (x, y)</th>
+        <th>Area2 of ABFP</th>
     </tr>
     </thead>
     <tbody id="precomputedTable"></tbody>
@@ -96,11 +102,10 @@
     // calculation of F coordinates
     // calculation of area
     // if area is close to target area, then it returns F and calculated area
-
-    function findPointF(px) {
+    // search for a point F corresponding to any target area (350, 430, etc.).
+    function findPointF(px, targetArea) {
         const P = { x: px, y: 0 };
         const steps = 1000;
-        const targetArea = 350;
 
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
@@ -121,6 +126,7 @@
     // displays the value in the dynamic result table
     //computes the F and area using previos function
     // updates the table with new values
+    // updates the table with both points and their corresponding areas. The function now fetches both F (with area 350) and F2 (area 430) and adds them to the table.
     function updateResults() {
         const px = parseFloat(document.getElementById("pointP").value);
         document.getElementById("px").innerText = px.toFixed(2);
@@ -128,13 +134,17 @@
         const resultTable = document.getElementById("resultTable");
         resultTable.innerHTML = ""; // Clear table
 
-        const result = findPointF(px);
-        if (result) {
+        const resultF = findPointF(px, 350);
+        const resultF2 = findPointF(px, 430);
+
+        if (resultF && resultF2) {
             const row = `
           <tr>
             <td>(${px.toFixed(2)}, 0)</td>
-            <td>(${result.F.x.toFixed(2)}, ${result.F.y.toFixed(2)})</td>
-            <td>${result.area}</td>
+            <td>(${resultF.F.x.toFixed(2)}, ${resultF.F.y.toFixed(2)})</td>
+            <td>${resultF.area}</td>
+            <td>(${resultF2.F.x.toFixed(2)}, ${resultF2.F.y.toFixed(2)})</td>
+            <td>${resultF2.area}</td>
           </tr>
         `;
             resultTable.innerHTML = row;
@@ -142,6 +152,8 @@
             resultTable.innerHTML = `
           <tr>
             <td>(${px.toFixed(2)}, 0)</td>
+            <td>No solution found</td>
+            <td>N/A</td>
             <td>No solution found</td>
             <td>N/A</td>
           </tr>
@@ -153,18 +165,23 @@
     //iterates trough each integer from 1 to 27
     // uses previos function to calculate area and F
     // displays results in another table
+    // display results for both points F and 𝐹2 for each integer value of P (from 1 to 27).
     function generatePrecomputedTable() {
         const tableBody = document.getElementById("precomputedTable");
-        tableBody.innerHTML = ""; // Clear existing content
+        tableBody.innerHTML = ""; 
 
         for (let px = 1; px <= 27; px++) {
-            const result = findPointF(px);
-            if (result) {
+            const resultF = findPointF(px, 350);
+            const resultF2 = findPointF(px, 430);
+
+            if (resultF && resultF2) {
                 const row = `
             <tr>
               <td>(${px}, 0)</td>
-              <td>(${result.F.x.toFixed(2)}, ${result.F.y.toFixed(2)})</td>
-              <td>${result.area}</td>
+              <td>(${resultF.F.x.toFixed(2)}, ${resultF.F.y.toFixed(2)})</td>
+              <td>${resultF.area}</td>
+              <td>(${resultF2.F.x.toFixed(2)}, ${resultF2.F.y.toFixed(2)})</td>
+              <td>${resultF2.area}</td>
             </tr>
           `;
                 tableBody.innerHTML += row;
